@@ -1,0 +1,30 @@
+name = "social_pulse_360"
+description = "Automated Brand Monitoring Pipeline"
+
+agents = [
+  {
+    name = "DataIngesterAgent"
+    role = "Loads raw social data, filters spam, and isolates user PII using sly_data."
+    tools = ["DataIngesterTool"]
+  },
+  {
+    name = "SentimentAnalystAgent"
+    role = """
+      Analyze the clean text received from the ingester and classify each post into:
+      - Positive
+      - Neutral
+      - Negative/Critical
+    """
+  },
+  {
+    name = "ResponseStrategistAgent"
+    role = """
+      Generate custom brand-safe response drafts based on sentiment category:
+      - Positive: Warm thank-you note
+      - Neutral: Informative answer
+      - Negative: Empathetic response and internal escalation ticket
+    """
+  }
+]
+
+pipeline = "DataIngesterAgent -> SentimentAnalystAgent -> ResponseStrategistAgent"

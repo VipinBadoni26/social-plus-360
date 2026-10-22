@@ -1,0 +1,1308 @@
+Agent: agent_network_designer
+
+[SYSTEM] @ 2026-10-22 16:21:00:
+
+Only answer inquiries that are directly within your area of expertise. Do not try to help for other matters.
+Do not mention what you can NOT do. Only mention what you can do.
+ 
+You are responsible for designing and modifying agent networks based on user requirements.
+
+Take the following steps. Make sure you don't miss any details and follow the steps carefully.
+
+LOOPABLE WORKFLOW (steps 1–3 can repeat any number of times):
+You may repeat steps 1–3 (create/modify structure, refine instructions, regenerate queries) until the network is ready for finalization.
+
+0) Research the organization or domain
+- If the user names a specific company, organization, product, or brand (e.g. "Grab", "UNHCR"),
+  you MUST call `internet_info_gatherer` before designing anything. This includes prompts where
+  the organization appears only as context (e.g. "support for Shopify merchants"). Your training
+  data may be outdated or wrong about a specific organization; do not rely on it.
+- In your inquiry to `internet_info_gatherer`, ask for: what the organization does, its main
+  business lines or services, key operational workflows and departments, the customer/partner
+  types it serves, and any recent changes (new services, restructuring, regulations).
+- If the answer leaves any of those items uncovered, call `internet_info_gatherer` again with a
+  narrower inquiry for the missing items, up to 3 calls in total. Stop as soon as the items above
+  are covered well enough to design the network.
+- If the user gives only a generic domain (e.g. "employee onboarding"), you may skip this step,
+  but call `internet_info_gatherer` if you are unsure about industry-specific roles or regulations.
+- Fold what you learn into the `agent_network_description` you pass to `agent_network_editor`
+  and `agent_network_instructions_editor`. Do not pass the research verbatim; summarize the
+  workflows, departments, and terminology that should shape the agents.
+
+1) Create or modify the network structure
+- If the user provides a company name or domain description for a new network, generate an agent network definition that mirrors relevant workflows and responsible nodes. Call your `agent_network_editor` tool. Ensure the agent network name is snake case.
+- If the user asks to modify an existing network's structure (add/remove agents, or change up-chains/down-chains), call `agent_network_editor` with the modification instructions.
+- You may call `internet_info_gatherer` to find more details on the company or domain.
+- If the user only asks to modify agent instructions (no structural changes), skip structural edits and go to step 2.
+- Wait for and inspect the response from `agent_network_editor` before proceeding.
+
+2) Create or refine agent instructions
+- Always call `agent_network_instructions_editor` to generate instructions after step 1 if the network structure is created.
+- After structural modification, you may call `agent_network_instructions_editor` to update agents' instructions.
+- You may call `agent_network_instructions_editor` multiple times as you iterate on the network; call it whenever agents are added or when their responsibilities change.
+- You may call `internet_info_gatherer` to find more details on the company or domain.
+- Wait for and inspect the response from `agent_network_instructions_editor` before proceeding.
+
+3) Generate sample queries
+- Obtain 3–4 sample queries for the current agent network by calling `agent_network_query_generator`.
+- If the sample queries do not match the network or you decide further changes are needed, return to steps 1 or 2, then regenerate queries.
+- You may call `agent_network_query_generator` repeatedly until the queries accurately reflect the network behavior.
+
+Operational notes:
+- Always wait for each tool's response before taking the next action.
+- Iteratively refine the structure, instructions, and queries.
+
+
+[HUMAN] @ 2026-10-22 16:21:00:
+# Build Social Pulse 360 — Automated Brand Monitoring Pipeline
+
+Act as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.
+
+## Objective
+
+Create a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.
+
+## Create these three agents
+
+### 1. DataIngesterAgent
+
+Responsibilities:
+
+* Accept social media posts containing an ID, handle, display name, and text.
+* Validate the input and identify missing or invalid fields.
+* Detect duplicate posts.
+* Identify likely spam, scams, suspicious links, and promotional bot messages.
+* Redact personal information where identifiable.
+* Preserve the original post ID for traceability.
+* Pass cleaned post data and spam flags to SentimentAnalystAgent.
+* Do not discard potentially important customer complaints simply because they contain negative language.
+
+### 2. SentimentAnalystAgent
+
+Responsibilities:
+
+* Analyse the cleaned post text.
+* Classify sentiment as Positive, Neutral, or Negative.
+* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.
+* Assign a priority of Low, Medium, High, or Critical.
+* Explain the reason for the classification.
+* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.
+* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.
+
+### 3. ResponseStrategistAgent
+
+Responsibilities:
+
+* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.
+* For positive posts, draft a thank-you message.
+* For neutral questions, draft a helpful response without inventing product capabilities or policies.
+* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.
+* For spam, recommend filtering or moderation rather than drafting a customer-service reply.
+* Recommend human escalation for high-priority complaints.
+* Never claim that an issue has been fixed unless the input confirms it.
+* Never publish or send responses automatically. All responses must remain drafts for human approval.
+
+## Workflow
+
+Configure the agents to run in this order:
+
+DataIngesterAgent → SentimentAnalystAgent → ResponseStrategistAgent
+
+Ensure that each agent receives the previous agent's output and that the original post ID remains associated with the result.
+
+## Output
+
+For each post, produce structured output containing:
+
+* post_id
+* handle
+* cleaned_text
+* is_spam
+* sentiment
+* topic
+* priority
+* classification_reason
+* response_draft
+* requires_human_review
+* escalation_reason
+
+Use the structured output formats and tool-calling conventions supported by the installed NeuroSan version.
+
+## Implementation requirements
+
+1. Use the actual NeuroSan agent-network schema supported by this installation.
+2. Reuse available framework capabilities instead of inventing unsupported configuration fields.
+3. Create three separate agents and connect them into a functioning workflow.
+4. Make the network callable from the NeuroSan frontend.
+5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.
+6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.
+7. Do not invent tool names, APIs, or framework features.
+8. Save or generate the network configuration in the appropriate location if the interface supports it.
+9. Validate the configuration and report any errors.
+10. Provide concise instructions for testing the complete pipeline with sample posts.
+
+Prioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.
+
+
+[AGENT] @ 2026-10-22 16:21:04:
+Invoking: `__agent_network_editor` with:
+```json
+{
+    "invoked_agent_name": "__agent_network_editor",
+    "invoking_start": true,
+    "params": {
+        "agent_network_description": "Social Pulse 360 - Automated Brand Monitoring Pipeline",
+        "mcp_tool": true,
+        "mode": "create",
+        "subnetwork": true,
+        "toolbox": true
+    }
+}
+```
+
+[AGENT_TOOL_RESULT (result from __agent_network_editor)] @ 2026-10-22 16:21:42:
+
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "network_editor"
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:21:42:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:21:43:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:21:43:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:21:43:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:21:43:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 58,
+    "empty_responses": 0,
+    "prompt_tokens": 2453,
+    "successful_requests": 1,
+    "time_taken_in_seconds": 42.689038038253784,
+    "total_cost": 0.0,
+    "total_tokens": 2511
+}
+```
+
+[AGENT] @ 2026-10-22 16:21:43:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 596,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {
+            "meta-llama/llama-3.3-70b-instruct": {
+                "completion_tokens": 596,
+                "empty_responses": 0,
+                "prompt_tokens": 64100,
+                "successful_requests": 18,
+                "time_taken_in_seconds": 25.900740146636963,
+                "total_cost": 0.0,
+                "total_tokens": 64696
+            }
+        }
+    },
+    "prompt_tokens": 64100,
+    "successful_requests": 18,
+    "time_taken_in_seconds": 42.689038038253784,
+    "total_cost": 0.0,
+    "total_tokens": 64696
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:21:43:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+
+
+[HUMAN] @ 2026-10-22 16:22:07:
+Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:22:07:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:22:08:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:22:09:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:22:09:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:22:09:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.6121666431427002,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT] @ 2026-10-22 16:22:09:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {}
+    },
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.6121666431427002,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:22:09:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+
+
+[SYSTEM] @ 2026-10-22 16:35:01:
+
+Only answer inquiries that are directly within your area of expertise. Do not try to help for other matters.
+Do not mention what you can NOT do. Only mention what you can do.
+ 
+You are responsible for designing and modifying agent networks based on user requirements.
+
+Take the following steps. Make sure you don't miss any details and follow the steps carefully.
+
+LOOPABLE WORKFLOW (steps 1–3 can repeat any number of times):
+You may repeat steps 1–3 (create/modify structure, refine instructions, regenerate queries) until the network is ready for finalization.
+
+0) Research the organization or domain
+- If the user names a specific company, organization, product, or brand (e.g. "Grab", "UNHCR"),
+  you MUST call `internet_info_gatherer` before designing anything. This includes prompts where
+  the organization appears only as context (e.g. "support for Shopify merchants"). Your training
+  data may be outdated or wrong about a specific organization; do not rely on it.
+- In your inquiry to `internet_info_gatherer`, ask for: what the organization does, its main
+  business lines or services, key operational workflows and departments, the customer/partner
+  types it serves, and any recent changes (new services, restructuring, regulations).
+- If the answer leaves any of those items uncovered, call `internet_info_gatherer` again with a
+  narrower inquiry for the missing items, up to 3 calls in total. Stop as soon as the items above
+  are covered well enough to design the network.
+- If the user gives only a generic domain (e.g. "employee onboarding"), you may skip this step,
+  but call `internet_info_gatherer` if you are unsure about industry-specific roles or regulations.
+- Fold what you learn into the `agent_network_description` you pass to `agent_network_editor`
+  and `agent_network_instructions_editor`. Do not pass the research verbatim; summarize the
+  workflows, departments, and terminology that should shape the agents.
+
+1) Create or modify the network structure
+- If the user provides a company name or domain description for a new network, generate an agent network definition that mirrors relevant workflows and responsible nodes. Call your `agent_network_editor` tool. Ensure the agent network name is snake case.
+- If the user asks to modify an existing network's structure (add/remove agents, or change up-chains/down-chains), call `agent_network_editor` with the modification instructions.
+- You may call `internet_info_gatherer` to find more details on the company or domain.
+- If the user only asks to modify agent instructions (no structural changes), skip structural edits and go to step 2.
+- Wait for and inspect the response from `agent_network_editor` before proceeding.
+
+2) Create or refine agent instructions
+- Always call `agent_network_instructions_editor` to generate instructions after step 1 if the network structure is created.
+- After structural modification, you may call `agent_network_instructions_editor` to update agents' instructions.
+- You may call `agent_network_instructions_editor` multiple times as you iterate on the network; call it whenever agents are added or when their responsibilities change.
+- You may call `internet_info_gatherer` to find more details on the company or domain.
+- Wait for and inspect the response from `agent_network_instructions_editor` before proceeding.
+
+3) Generate sample queries
+- Obtain 3–4 sample queries for the current agent network by calling `agent_network_query_generator`.
+- If the sample queries do not match the network or you decide further changes are needed, return to steps 1 or 2, then regenerate queries.
+- You may call `agent_network_query_generator` repeatedly until the queries accurately reflect the network behavior.
+
+Operational notes:
+- Always wait for each tool's response before taking the next action.
+- Iteratively refine the structure, instructions, and queries.
+
+
+[HUMAN] @ 2026-10-22 16:35:01:
+# Build Social Pulse 360 — Automated Brand Monitoring Pipeline
+
+Act as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.
+
+## Objective
+
+Create a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.
+
+## Create these three agents
+
+### 1. DataIngesterAgent
+
+Responsibilities:
+
+* Accept social media posts containing an ID, handle, display name, and text.
+* Validate the input and identify missing or invalid fields.
+* Detect duplicate posts.
+* Identify likely spam, scams, suspicious links, and promotional bot messages.
+* Redact personal information where identifiable.
+* Preserve the original post ID for traceability.
+* Pass cleaned post data and spam flags to SentimentAnalystAgent.
+* Do not discard potentially important customer complaints simply because they contain negative language.
+
+### 2. SentimentAnalystAgent
+
+Responsibilities:
+
+* Analyse the cleaned post text.
+* Classify sentiment as Positive, Neutral, or Negative.
+* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.
+* Assign a priority of Low, Medium, High, or Critical.
+* Explain the reason for the classification.
+* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.
+* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.
+
+### 3. ResponseStrategistAgent
+
+Responsibilities:
+
+* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.
+* For positive posts, draft a thank-you message.
+* For neutral questions, draft a helpful response without inventing product capabilities or policies.
+* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.
+* For spam, recommend filtering or moderation rather than drafting a customer-service reply.
+* Recommend human escalation for high-priority complaints.
+* Never claim that an issue has been fixed unless the input confirms it.
+* Never publish or send responses automatically. All responses must remain drafts for human approval.
+
+## Workflow
+
+Configure the agents to run in this order:
+
+DataIngesterAgent → SentimentAnalystAgent → ResponseStrategistAgent
+
+Ensure that each agent receives the previous agent's output and that the original post ID remains associated with the result.
+
+## Output
+
+For each post, produce structured output containing:
+
+* post_id
+* handle
+* cleaned_text
+* is_spam
+* sentiment
+* topic
+* priority
+* classification_reason
+* response_draft
+* requires_human_review
+* escalation_reason
+
+Use the structured output formats and tool-calling conventions supported by the installed NeuroSan version.
+
+## Implementation requirements
+
+1. Use the actual NeuroSan agent-network schema supported by this installation.
+2. Reuse available framework capabilities instead of inventing unsupported configuration fields.
+3. Create three separate agents and connect them into a functioning workflow.
+4. Make the network callable from the NeuroSan frontend.
+5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.
+6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.
+7. Do not invent tool names, APIs, or framework features.
+8. Save or generate the network configuration in the appropriate location if the interface supports it.
+9. Validate the configuration and report any errors.
+10. Provide concise instructions for testing the complete pipeline with sample posts.
+
+Prioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.
+
+
+[AGENT] @ 2026-10-22 16:35:03:
+Invoking: `__agent_network_editor` with:
+```json
+{
+    "invoked_agent_name": "__agent_network_editor",
+    "invoking_start": true,
+    "params": {
+        "agent_network_description": "Social Pulse 360 - Automated Brand Monitoring Pipeline",
+        "mcp_tool": true,
+        "mode": "create",
+        "subnetwork": true,
+        "toolbox": true
+    }
+}
+```
+
+[AGENT_TOOL_RESULT (result from __agent_network_editor)] @ 2026-10-22 16:35:17:
+
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "network_editor"
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:35:17:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:35:18:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:35:18:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:35:18:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:35:18:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 58,
+    "empty_responses": 0,
+    "prompt_tokens": 2505,
+    "successful_requests": 1,
+    "time_taken_in_seconds": 16.694363594055176,
+    "total_cost": 0.0,
+    "total_tokens": 2563
+}
+```
+
+[AGENT] @ 2026-10-22 16:35:18:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 148,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {
+            "meta-llama/llama-3.3-70b-instruct": {
+                "completion_tokens": 148,
+                "empty_responses": 0,
+                "prompt_tokens": 13897,
+                "successful_requests": 6,
+                "time_taken_in_seconds": 7.148840665817261,
+                "total_cost": 0.0,
+                "total_tokens": 14045
+            }
+        }
+    },
+    "prompt_tokens": 13897,
+    "successful_requests": 6,
+    "time_taken_in_seconds": 16.694363594055176,
+    "total_cost": 0.0,
+    "total_tokens": 14045
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:35:18:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+
+
+[HUMAN] @ 2026-10-22 16:36:01:
+Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:36:01:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:36:02:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:36:02:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:36:02:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:36:02:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.3201539516448975,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT] @ 2026-10-22 16:36:02:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {}
+    },
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.3201539516448975,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:36:02:
+```json
+{
+    "error": "Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+
+
+[HUMAN] @ 2026-10-22 16:42:39:
+Update the existing social_pulse_360_network_agent to implement the complete Social Pulse 360 automated brand-monitoring workflow.
+
+The current output contains fields such as Mode, Relevant, Strength, Claim, and Requirements. These fields do not fulfil the requirements of our brand-monitoring use case.
+
+Inspect the existing agent network configuration and use the actual NeuroSan framework schema and supported tools.
+
+Implement the following three distinct agents and connect them sequentially:
+
+1. DataIngesterAgent
+
+* Accept a social media post containing id, handle, display_name, and text.
+* Validate the input.
+* Detect spam, suspicious links, and duplicate posts.
+* Redact identifiable personal information where appropriate.
+* Preserve the original post ID.
+* Do not classify genuine negative customer feedback as spam simply because it is negative.
+
+2. SentimentAnalystAgent
+
+* Classify each genuine post as Positive, Neutral, or Negative.
+* Identify the topic.
+* Assign priority: Low, Medium, High, or Critical.
+* Explain the classification.
+* Flag product failures, billing problems, and repeated unresolved complaints for human review.
+
+3. ResponseStrategistAgent
+
+* Generate a professional response draft.
+* Thank customers who provide positive feedback.
+* Answer neutral questions without inventing product information.
+* Respond empathetically to negative feedback.
+* Recommend escalation for high-priority complaints.
+* Recommend moderation rather than customer-service responses for spam.
+* Never publish responses automatically.
+
+Return structured JSON for each post using these fields:
+post_id, handle, cleaned_text, is_spam, sentiment, topic, priority, classification_reason, response_draft, requires_human_review, escalation_reason.
+
+Ensure that the network actually calls the three agents in sequence and passes each agent's output to the next.
+
+Preserve any existing configuration that is required by the framework. Do not invent unsupported configuration fields or tool names.
+
+After making the changes, explain how to save, launch, and test the updated network.
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:42:39:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:42:40:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:42:40:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:42:40:
+```json
+{
+    "error": "Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:42:40:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.3727753162384033,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT] @ 2026-10-22 16:42:40:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {}
+    },
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.3727753162384033,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:42:40:
+```json
+{
+    "error": "Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Update the existing social_pulse_360_network_agent to implement the complete Social Pulse 360 automated brand-monitoring workflow.\n\nThe current output contains fields such as Mode, Relevant, Strength, Claim, and Requirements. These fields do not fulfil the requirements of our brand-monitoring use case.\n\nInspect the existing agent network configuration and use the actual NeuroSan framework schema and supported tools.\n\nImplement the following three distinct agents and connect them sequentially:\n\n1. DataIngesterAgent\n\n* Accept a social media post containing id, handle, display_name, and text.\n* Validate the input.\n* Detect spam, suspicious links, and duplicate posts.\n* Redact identifiable personal information where appropriate.\n* Preserve the original post ID.\n* Do not classify genuine negative customer feedback as spam simply because it is negative.\n\n2. SentimentAnalystAgent\n\n* Classify each genuine post as Positive, Neutral, or Negative.\n* Identify the topic.\n* Assign priority: Low, Medium, High, or Critical.\n* Explain the classification.\n* Flag product failures, billing problems, and repeated unresolved complaints for human review.\n\n3. ResponseStrategistAgent\n\n* Generate a professional response draft.\n* Thank customers who provide positive feedback.\n* Answer neutral questions without inventing product information.\n* Respond empathetically to negative feedback.\n* Recommend escalation for high-priority complaints.\n* Recommend moderation rather than customer-service responses for spam.\n* Never publish responses automatically.\n\nReturn structured JSON for each post using these fields:\npost_id, handle, cleaned_text, is_spam, sentiment, topic, priority, classification_reason, response_draft, requires_human_review, escalation_reason.\n\nEnsure that the network actually calls the three agents in sequence and passes each agent's output to the next.\n\nPreserve any existing configuration that is required by the framework. Do not invent unsupported configuration fields or tool names.\n\nAfter making the changes, explain how to save, launch, and test the updated network.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+
+
+[HUMAN] @ 2026-10-22 16:44:19:
+Modify the existing social_pulse_360_network_agent to implement a simple three-agent brand-monitoring pipeline using the installed NeuroSan framework.
+
+Create and connect these agents sequentially:
+
+1. DataIngesterAgent: Validate social media posts, detect obvious spam and suspicious links, identify duplicates, and redact identifiable personal information.
+2. SentimentAnalystAgent: Classify each post as Positive, Neutral, or Negative. Identify the topic and assign Low, Medium, High, or Critical priority.
+3. ResponseStrategistAgent: Draft a professional response, recommend human escalation for serious complaints, and recommend moderation for spam. Never publish responses automatically.
+
+Return JSON with these fields:
+post_id, handle, is_spam, sentiment, topic, priority, classification_reason, response_draft, requires_human_review, escalation_reason.
+
+Pass each agent's output to the next agent. Preserve the existing framework-compatible configuration and use only supported tools and schemas.
+
+Keep the implementation small. Do not add unnecessary tools, documentation, or extra agents. Save the updated configuration and explain how to test it.
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:44:20:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:44:20:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:44:20:
+Retrying: the LLM API returned an error (PaymentRequiredResponseError) - This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit
+
+chat_context:
+{}
+
+
+[AI] @ 2026-10-22 16:44:21:
+```json
+{
+    "error": "Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit",
+    "tool": "agent_network_designer"
+}
+```
+
+[AGENT] @ 2026-10-22 16:44:21:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.962233304977417,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT] @ 2026-10-22 16:44:21:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 0,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {}
+    },
+    "prompt_tokens": 0,
+    "successful_requests": 0,
+    "time_taken_in_seconds": 1.962233304977417,
+    "total_cost": 0.0,
+    "total_tokens": 0
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:44:21:
+```json
+{
+    "error": "Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit",
+    "tool": "agent_network_designer"
+}
+```
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "# Build Social Pulse 360 \u2014 Automated Brand Monitoring Pipeline\n\nAct as an expert AI agent architect. Build a working multi-agent application called **Social Pulse 360** using the available NeuroSan framework and its supported agent-network configuration format.\n\n## Objective\n\nCreate a brand-monitoring pipeline that processes social media posts, detects spam, protects personal information, analyses sentiment, and generates appropriate response drafts for a brand's social media team.\n\n## Create these three agents\n\n### 1. DataIngesterAgent\n\nResponsibilities:\n\n* Accept social media posts containing an ID, handle, display name, and text.\n* Validate the input and identify missing or invalid fields.\n* Detect duplicate posts.\n* Identify likely spam, scams, suspicious links, and promotional bot messages.\n* Redact personal information where identifiable.\n* Preserve the original post ID for traceability.\n* Pass cleaned post data and spam flags to SentimentAnalystAgent.\n* Do not discard potentially important customer complaints simply because they contain negative language.\n\n### 2. SentimentAnalystAgent\n\nResponsibilities:\n\n* Analyse the cleaned post text.\n* Classify sentiment as Positive, Neutral, or Negative.\n* Identify the primary topic, such as Product Issue, Technical Support, Billing, Feature Request, Product Feedback, or Spam.\n* Assign a priority of Low, Medium, High, or Critical.\n* Explain the reason for the classification.\n* Flag complaints involving outages, repeated unresolved issues, billing problems, or significant customer dissatisfaction for human review.\n* Treat spam flagged by DataIngesterAgent separately from genuine customer feedback.\n\n### 3. ResponseStrategistAgent\n\nResponsibilities:\n\n* Generate a professional, empathetic, brand-safe response draft for genuine customer posts.\n* For positive posts, draft a thank-you message.\n* For neutral questions, draft a helpful response without inventing product capabilities or policies.\n* For negative posts, acknowledge the problem, apologise where appropriate, and suggest a sensible next step.\n* For spam, recommend filtering or moderation rather than drafting a customer-service reply.\n* Recommend human escalation for high-priority complaints.\n* Never claim that an issue has been fixed unless the input confirms it.\n* Never publish or send responses automatically. All responses must remain drafts for human approval.\n\n## Workflow\n\nConfigure the agents to run in this order:\n\nDataIngesterAgent \u2192 SentimentAnalystAgent \u2192 ResponseStrategistAgent\n\nEnsure that each agent receives the previous agent's output and that the original post ID remains associated with the result.\n\n## Output\n\nFor each post, produce structured output containing:\n\n* post_id\n* handle\n* cleaned_text\n* is_spam\n* sentiment\n* topic\n* priority\n* classification_reason\n* response_draft\n* requires_human_review\n* escalation_reason\n\nUse the structured output formats and tool-calling conventions supported by the installed NeuroSan version.\n\n## Implementation requirements\n\n1. Use the actual NeuroSan agent-network schema supported by this installation.\n2. Reuse available framework capabilities instead of inventing unsupported configuration fields.\n3. Create three separate agents and connect them into a functioning workflow.\n4. Make the network callable from the NeuroSan frontend.\n5. If the framework supports file-reading tools, allow the workflow to process a CSV containing social media posts.\n6. If direct CSV processing is not supported through the frontend, explain the smallest additional step needed to process a local CSV file.\n7. Do not invent tool names, APIs, or framework features.\n8. Save or generate the network configuration in the appropriate location if the interface supports it.\n9. Validate the configuration and report any errors.\n10. Provide concise instructions for testing the complete pipeline with sample posts.\n\nPrioritise a working prototype over unnecessary complexity. Do not integrate live social media APIs.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "\n```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"network_editor\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Please validate the generated Social Pulse 360 agent network against the actual NeuroSan framework installed in this environment. Check the configuration schema, agent references, tool definitions, and workflow connections. Correct any errors and tell me exactly where the configuration was saved and how to run it from the frontend. Do not create duplicate agents if they already exist.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Update the existing social_pulse_360_network_agent to implement the complete Social Pulse 360 automated brand-monitoring workflow.\n\nThe current output contains fields such as Mode, Relevant, Strength, Claim, and Requirements. These fields do not fulfil the requirements of our brand-monitoring use case.\n\nInspect the existing agent network configuration and use the actual NeuroSan framework schema and supported tools.\n\nImplement the following three distinct agents and connect them sequentially:\n\n1. DataIngesterAgent\n\n* Accept a social media post containing id, handle, display_name, and text.\n* Validate the input.\n* Detect spam, suspicious links, and duplicate posts.\n* Redact identifiable personal information where appropriate.\n* Preserve the original post ID.\n* Do not classify genuine negative customer feedback as spam simply because it is negative.\n\n2. SentimentAnalystAgent\n\n* Classify each genuine post as Positive, Neutral, or Negative.\n* Identify the topic.\n* Assign priority: Low, Medium, High, or Critical.\n* Explain the classification.\n* Flag product failures, billing problems, and repeated unresolved complaints for human review.\n\n3. ResponseStrategistAgent\n\n* Generate a professional response draft.\n* Thank customers who provide positive feedback.\n* Answer neutral questions without inventing product information.\n* Respond empathetically to negative feedback.\n* Recommend escalation for high-priority complaints.\n* Recommend moderation rather than customer-service responses for spam.\n* Never publish responses automatically.\n\nReturn structured JSON for each post using these fields:\npost_id, handle, cleaned_text, is_spam, sentiment, topic, priority, classification_reason, response_draft, requires_human_review, escalation_reason.\n\nEnsure that the network actually calls the three agents in sequence and passes each agent's output to the next.\n\nPreserve any existing configuration that is required by the framework. Do not invent unsupported configuration fields or tool names.\n\nAfter making the changes, explain how to save, launch, and test the updated network.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "Modify the existing social_pulse_360_network_agent to implement a simple three-agent brand-monitoring pipeline using the installed NeuroSan framework.\n\nCreate and connect these agents sequentially:\n\n1. DataIngesterAgent: Validate social media posts, detect obvious spam and suspicious links, identify duplicates, and redact identifiable personal information.\n2. SentimentAnalystAgent: Classify each post as Positive, Neutral, or Negative. Identify the topic and assign Low, Medium, High, or Critical priority.\n3. ResponseStrategistAgent: Draft a professional response, recommend human escalation for serious complaints, and recommend moderation for spam. Never publish responses automatically.\n\nReturn JSON with these fields:\npost_id, handle, is_spam, sentiment, topic, priority, classification_reason, response_draft, requires_human_review, escalation_reason.\n\nPass each agent's output to the next agent. Preserve the existing framework-compatible configuration and use only supported tools and schemas.\n\nKeep the implementation small. Do not add unnecessary tools, documentation, or extra agents. Save the updated configuration and explain how to test it.\n",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "agent_network_designer"
+                        }
+                    ],
+                    "text": "```json\n{{\n    \"error\": \"Agent stopped due to exception This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 4355. To increase, visit https://openrouter.ai/workspaces/default/keys/976b18f6c99791a90d13614975af4dea73b9d18ae7aa9f328740156ac1c74fcf and adjust the key's total limit\",\n    \"tool\": \"agent_network_designer\"\n}}\n```",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "agent_network_designer"
+                }
+            ]
+        }
+    ]
+}
+

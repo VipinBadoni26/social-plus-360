@@ -1,0 +1,127 @@
+Agent: social_pulse_360_network_agent
+
+[HUMAN] @ 2026-10-22 16:39:56:
+{
+  "id": "101",
+  "handle": "dev_alex",
+  "display_name": "Alex River",
+  "text": "Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit"
+}
+
+[AI] @ 2026-10-22 16:40:03:
+{
+  "Name": "social_pulse_360_network_agent",
+  "Inquiry": "Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit",
+  "Mode": "Determine",
+  "Relevant": "Yes",
+  "Strength": "8",
+  "Claim": "Partial",
+  "Requirements": ["More information about the crash", "Details about the enterprise package"]
+}
+
+[AGENT] @ 2026-10-22 16:40:03:
+```json
+{
+    "caveats": [
+        "Token usage from agents of the main agent network only. Usage from external agents is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 90,
+    "empty_responses": 0,
+    "prompt_tokens": 682,
+    "successful_requests": 1,
+    "time_taken_in_seconds": 14.776158809661865,
+    "total_cost": 0.0,
+    "total_tokens": 772
+}
+```
+
+[AGENT] @ 2026-10-22 16:40:03:
+```json
+{
+    "caveats": [
+        "Request total: includes token usage from external agents invoked via direct sessions on this server. Usage from external agents reached over the network is not included.",
+        "Token counts are approximate and estimated using tiktoken.",
+        "time_taken_in_seconds includes overhead from Langchain and Neuro SAN"
+    ],
+    "completion_tokens": 90,
+    "empty_responses": 0,
+    "models": {
+        "ChatOpenRouter": {
+            "meta-llama/llama-3.3-70b-instruct": {
+                "completion_tokens": 90,
+                "empty_responses": 0,
+                "prompt_tokens": 682,
+                "successful_requests": 1,
+                "time_taken_in_seconds": 13.506859302520752,
+                "total_cost": 0.0,
+                "total_tokens": 772
+            }
+        }
+    },
+    "prompt_tokens": 682,
+    "successful_requests": 1,
+    "time_taken_in_seconds": 14.776158809661865,
+    "total_cost": 0.0,
+    "total_tokens": 772
+}
+```
+
+[AGENT_FRAMEWORK] @ 2026-10-22 16:40:03:
+{
+  "Name": "social_pulse_360_network_agent",
+  "Inquiry": "Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit",
+  "Mode": "Determine",
+  "Relevant": "Yes",
+  "Strength": "8",
+  "Claim": "Partial",
+  "Requirements": ["More information about the crash", "Details about the enterprise package"]
+}
+
+chat_context:
+{
+    "chat_histories": [
+        {
+            "messages": [
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "social_pulse_360_network_agent"
+                        }
+                    ],
+                    "text": "{{\n  \"id\": \"101\",\n  \"handle\": \"dev_alex\",\n  \"display_name\": \"Alex River\",\n  \"text\": \"Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit\"\n}}",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "social_pulse_360_network_agent"
+                        }
+                    ],
+                    "text": "{{\n  \"id\": \"101\",\n  \"handle\": \"dev_alex\",\n  \"display_name\": \"Alex River\",\n  \"text\": \"Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit\"\n}}",
+                    "type": "HUMAN"
+                },
+                {
+                    "origin": [
+                        {
+                            "instantiation_index": 1,
+                            "tool": "social_pulse_360_network_agent"
+                        }
+                    ],
+                    "text": "{{\n  \"Name\": \"social_pulse_360_network_agent\",\n  \"Inquiry\": \"Just bought the new enterprise package and it crashed within 5 minutes! Unacceptable downtime #fixit\",\n  \"Mode\": \"Determine\",\n  \"Relevant\": \"Yes\",\n  \"Strength\": \"8\",\n  \"Claim\": \"Partial\",\n  \"Requirements\": [\"More information about the crash\", \"Details about the enterprise package\"]\n}}",
+                    "type": "AI"
+                }
+            ],
+            "origin": [
+                {
+                    "instantiation_index": 1,
+                    "tool": "social_pulse_360_network_agent"
+                }
+            ]
+        }
+    ]
+}
+
